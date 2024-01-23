@@ -377,8 +377,8 @@ def build(args):
     num_classes = 151 if args.dataset != 'oi' else None #TODO: openimage v6
     num_rel_classes = 51 if args.dataset != 'oi' else None #TODO: openimage v6
 
-    num_classes = args.num_classes if args.num_classes else num_classes
-    num_rel_classes = args.num_predicates if args.num_predicates else num_rel_classes
+    num_classes = args.num_classes+1 if args.num_classes else num_classes
+    num_rel_classes = args.num_predicates+1 if args.num_predicates else num_rel_classes
     print("num_classes: ", num_classes)
     print("num_rel_classes: ", num_rel_classes)
 
