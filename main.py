@@ -12,6 +12,9 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, DistributedSampler
 
+from tqdm import tqdm
+import wandb
+
 import datasets
 import util.misc as utils
 from datasets import build_dataset, get_coco_api_from_dataset
@@ -82,8 +85,10 @@ def get_args_parser():
 
     # dataset parameters
     parser.add_argument('--dataset', default='vg')
-    parser.add_argument('--ann_path', default='./data/vg/', type=str)
-    parser.add_argument('--img_folder', default='/home/cong/Dokumente/tmp/data/visualgenome/images/', type=str)
+    parser.add_argument('--ann_path', default='./data/vg/VG-SGG.h5', type=str)
+    parser.add_argument('--dict_path', default='./data/vg/VG-SGG-dicts.json', type=str)
+    parser.add_argument('--img_folder', default='./data/vg/images/', type=str)
+    parser.add_argument('--vg_image_file', default='./data/vg/image_data.json', type=str)
 
     parser.add_argument('--output_dir', default='',
                         help='path where to save, empty for no saving')
@@ -114,6 +119,12 @@ def main(args):
     print(args)
 
     device = torch.device(args.device)
+
+    # get number of classes from dict_path
+    with open(args.dict_path, 'r') as f:
+        dict_data = json.load(f)
+    args.num_classes = len(dict_data['label_to_idx'].keys())
+    args.num_predicates = len(dict_data['predicate_to_idx'].keys())
 
     # fix the seed for reproducibility
     seed = args.seed + utils.get_rank()
@@ -182,11 +193,12 @@ def main(args):
         if args.output_dir:
             utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, output_dir / "eval.pth")
         return
+    
+    # init wandb
+    wandb.init(project="reltr", name=args.output_dir.split('/')[-1], config=args)
 
     print("Start training")
     start_time = time.time()
-    test_stats, coco_evaluator = evaluate(model, criterion, postprocessors, data_loader_val, base_ds, device, args)
-
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
@@ -212,6 +224,9 @@ def main(args):
                      **{f'test_{k}': v for k, v in test_stats.items()},
                      'epoch': epoch,
                      'n_parameters': n_parameters}
+        
+        # log stats to wandb
+        wandb.log(log_stats)
 
         if args.output_dir and utils.is_main_process():
             with (output_dir / "log.txt").open("a") as f:

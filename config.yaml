@@ -1,0 +1,33 @@
+version: 1.1.0
+
+modifiers:
+    - !GMPruningModifier
+        end_epoch: 51.0
+        final_sparsity: 0.95
+        global_sparsity: False
+        init_sparsity: 0.05
+        inter_func: cubic
+        leave_enabled: True
+        mask_type: unstructured
+        params: ['backbone.0.body.layer1.0.conv2.weight', 'backbone.0.body.layer1.1.conv2.weight', 'backbone.0.body.layer1.2.conv2.weight', 'backbone.0.body.layer2.0.conv2.weight', 'backbone.0.body.layer2.1.conv2.weight', 'backbone.0.body.layer2.2.conv2.weight', 'backbone.0.body.layer2.3.conv2.weight', 'backbone.0.body.layer3.0.conv2.weight', 'backbone.0.body.layer3.0.downsample.0.weight', 'backbone.0.body.layer3.1.conv2.weight', 'backbone.0.body.layer3.2.conv2.weight', 'backbone.0.body.layer3.3.conv2.weight', 'backbone.0.body.layer3.4.conv2.weight', 'backbone.0.body.layer3.5.conv2.weight', 'backbone.0.body.layer4.0.conv1.weight', 'backbone.0.body.layer4.0.conv2.weight', 'backbone.0.body.layer4.0.downsample.0.weight', 'backbone.0.body.layer4.1.conv2.weight', 'backbone.0.body.layer4.2.conv2.weight',    'transformer.encoder.layers.0.self_attn.out_proj.weight',      'transformer.encoder.layers.1.self_attn.out_proj.weight',      'transformer.encoder.layers.2.self_attn.out_proj.weight',      'transformer.encoder.layers.3.self_attn.out_proj.weight',      'transformer.encoder.layers.4.self_attn.out_proj.weight',      'transformer.encoder.layers.5.self_attn.out_proj.weight',      'transformer.decoder.layers.0.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.0.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.0.self_attn_so.out_proj.weight',    'transformer.decoder.layers.0.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.0.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.0.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.0.cross_obj_entity.out_proj.weight',      'transformer.decoder.layers.1.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.1.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.1.self_attn_so.out_proj.weight',    'transformer.decoder.layers.1.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.1.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.1.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.1.cross_obj_entity.out_proj.weight',      'transformer.decoder.layers.2.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.2.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.2.self_attn_so.out_proj.weight',    'transformer.decoder.layers.2.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.2.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.2.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.2.cross_obj_entity.out_proj.weight',      'transformer.decoder.layers.3.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.3.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.3.self_attn_so.out_proj.weight',    'transformer.decoder.layers.3.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.3.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.3.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.3.cross_obj_entity.out_proj.weight',      'transformer.decoder.layers.4.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.4.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.4.self_attn_so.out_proj.weight',    'transformer.decoder.layers.4.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.4.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.4.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.4.cross_obj_entity.out_proj.weight',      'transformer.decoder.layers.5.self_attn_entity.out_proj.weight',    'transformer.decoder.layers.5.cross_attn_entity.out_proj.weight',      'transformer.decoder.layers.5.self_attn_so.out_proj.weight',    'transformer.decoder.layers.5.cross_attn_sub.out_proj.weight', 'transformer.decoder.layers.5.cross_sub_entity.out_proj.weight',      'transformer.decoder.layers.5.cross_attn_obj.out_proj.weight', 'transformer.decoder.layers.5.cross_obj_entity.out_proj.weight',   'so_mask_conv.1.weight', 'so_mask_conv.5.weight']            
+        start_epoch: 1.0
+        update_frequency: 1.25
+
+    - !EpochRangeModifier
+        end_epoch: 88.0
+        start_epoch: 0.0
+
+    - !SetLearningRateModifier
+        constant_logging: False
+        end_epoch: -1.0
+        learning_rate: 5.5e-05
+        start_epoch: 0.0
+
+    - !LearningRateModifier
+        constant_logging: False
+        end_epoch: -1.0
+        init_lr: 1.375e-05
+        lr_class: StepLR
+        lr_kwargs: {'step_size': 19, 'gamma': 0.25}
+        start_epoch: 51.0
+        update_frequency: -1.0

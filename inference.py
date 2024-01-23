@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms as T
 from models import build_model
-
+import time
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Set transformer detector', add_help=False)
@@ -15,7 +15,7 @@ def get_args_parser():
     parser.add_argument('--dataset', default='vg')
 
     # image path
-    parser.add_argument('--img_path', type=str, default='demo/vg1.jpg',
+    parser.add_argument('--img_path', type=str, default='demo/reading5.jpg',
                         help="Path of the test image")
 
     # * Backbone
@@ -51,7 +51,7 @@ def get_args_parser():
 
     parser.add_argument('--device', default='cuda',
                         help='device to use for training / testing')
-    parser.add_argument('--resume', default='ckpt/checkpoint0149_oi.pth', help='resume from checkpoint')
+    parser.add_argument('--resume', default='ckpt/checkpoint0149.pth', help='resume from checkpoint')
     parser.add_argument('--set_cost_class', default=1, type=float,
                         help="Class coefficient in the matching cost")
     parser.add_argument('--set_cost_bbox', default=5, type=float,
@@ -128,23 +128,28 @@ def main(args):
     img = transform(im).unsqueeze(0)
 
     # propagate through the model
+    start=time.time()
     outputs = model(img)
+    print("time inference :", time.time()-start)
 
     # keep only predictions with 0.+ confidence
     probas = outputs['rel_logits'].softmax(-1)[0, :, :-1]
     probas_sub = outputs['sub_logits'].softmax(-1)[0, :, :-1]
     probas_obj = outputs['obj_logits'].softmax(-1)[0, :, :-1]
-    keep = torch.logical_and(probas.max(-1).values > 0.3, torch.logical_and(probas_sub.max(-1).values > 0.3,
-                                                                            probas_obj.max(-1).values > 0.3))
-
+    keep = torch.logical_and(probas.max(-1).values > 0.1, torch.logical_and(probas_sub.max(-1).values > 0.1,
+                                                                            probas_obj.max(-1).values > 0.1))
     # convert boxes from [0; 1] to image scales
     sub_bboxes_scaled = rescale_bboxes(outputs['sub_boxes'][0, keep], im.size)
     obj_bboxes_scaled = rescale_bboxes(outputs['obj_boxes'][0, keep], im.size)
 
-    topk = 10
+    topk = 30
     keep_queries = torch.nonzero(keep, as_tuple=True)[0]
     indices = torch.argsort(-probas[keep_queries].max(-1)[0] * probas_sub[keep_queries].max(-1)[0] * probas_obj[keep_queries].max(-1)[0])[:topk]
+    values = torch.sort(probas[keep_queries].max(-1)[0] * probas_sub[keep_queries].max(-1)[0] * probas_obj[keep_queries].max(-1)[0], descending=True)[:topk][0].tolist()
+    print(values)
     keep_queries = keep_queries[indices]
+
+    print(keep_queries)
 
     # use lists to store the outputs via up-values
     conv_features, dec_attn_weights_sub, dec_attn_weights_obj = [], [], []
@@ -176,6 +181,8 @@ def main(args):
         h, w = conv_features['0'].tensors.shape[-2:]
         im_w, im_h = im.size
 
+        print("Detected relationships:")
+        i = 0
         fig, axs = plt.subplots(ncols=len(indices), nrows=3, figsize=(22, 7))
         for idx, ax_i, (sxmin, symin, sxmax, symax), (oxmin, oymin, oxmax, oymax) in \
                 zip(keep_queries, axs.T, sub_bboxes_scaled[indices], obj_bboxes_scaled[indices]):
@@ -195,6 +202,9 @@ def main(args):
 
             ax.axis('off')
             ax.set_title(CLASSES[probas_sub[idx].argmax()]+' '+REL_CLASSES[probas[idx].argmax()]+' '+CLASSES[probas_obj[idx].argmax()], fontsize=10)
+            print(CLASSES[probas_sub[idx].argmax()]+' '+REL_CLASSES[probas[idx].argmax()]+' '+CLASSES[probas_obj[idx].argmax()] + " : " +str(values[i]))
+            i += 1
+
 
         fig.tight_layout()
         plt.show()

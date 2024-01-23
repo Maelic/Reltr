@@ -1,4 +1,4 @@
 ckpt/
-*.json
+data/
 .idea/
 __pycache__/
