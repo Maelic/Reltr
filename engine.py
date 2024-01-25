@@ -20,7 +20,7 @@ from lib.evaluation.sg_eval import BasicSceneGraphEvaluator, calculate_mR_from_e
 
 def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, epoch: int, max_norm: float = 0):
+                    device: torch.device, epoch: int, max_norm: float = 0, max_epochs: int = 0):
     model.train()
     criterion.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -34,7 +34,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     print_freq = 500
 
     # init tqdm pbar
-    pbar = tqdm(total=len(data_loader), leave=True, desc="Train / Epoch "+str(epoch), position=0)
+    pbar = tqdm(total=len(data_loader), leave=True, desc="Train - Epoch "+str(epoch)+"/"+str(max_epoch), position=0)
 
     for samples, targets in data_loader:
         samples = samples.to(device)
@@ -114,7 +114,10 @@ def evaluate(model, criterion, postprocessors, data_loader, base_ds, device, arg
     iou_types = tuple(k for k in ('segm', 'bbox') if k in postprocessors.keys())
     coco_evaluator = CocoEvaluator(base_ds, iou_types)
 
-    for samples, targets in metric_logger.log_every(data_loader, 100, header):
+    # init tqdm pbar
+    pbar = tqdm(total=len(data_loader), leave=True, desc="Evaluate ", position=0)
+
+    for samples, targets in data_loader:
 
         samples = samples.to(device)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
@@ -142,6 +145,10 @@ def evaluate(model, criterion, postprocessors, data_loader, base_ds, device, arg
         results = postprocessors['bbox'](outputs, orig_target_sizes)
 
         res = {target['image_id'].item(): output for target, output in zip(targets, results)}
+
+        pbar.set_postfix({'loss': sum(loss_dict_reduced_scaled.values())})
+        pbar.update(1)
+
         if coco_evaluator is not None:
             coco_evaluator.update(res)
 
