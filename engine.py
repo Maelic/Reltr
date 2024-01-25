@@ -34,7 +34,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     print_freq = 500
 
     # init tqdm pbar
-    pbar = tqdm(total=len(data_loader), leave=True, desc="Train - Epoch "+str(epoch)+"/"+str(max_epoch), position=0)
+    pbar = tqdm(total=len(data_loader), leave=True, desc="Train - Epoch "+str(epoch)+"/"+str(max_epochs), position=0)
 
     for samples, targets in data_loader:
         samples = samples.to(device)
