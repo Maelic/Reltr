@@ -198,6 +198,7 @@ def main(args):
     wandb.init(project="reltr", name=args.output_dir.split('/')[-1], config=args)
 
     print("Start training")
+    # test_stats, coco_evaluator = evaluate(model, criterion, postprocessors, data_loader_val, base_ds, device, args)
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:

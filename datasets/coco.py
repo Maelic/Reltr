@@ -99,10 +99,21 @@ class ConvertCocoToVG(object):
 BOX_SCALE = 1024
 
 class CocoDetectionVG(torchvision.datasets.CocoDetection):
-    def __init__(self, ann_file, split, img_dir, image_file, transforms):
+    def __init__(self, ann_file, split, img_dir, image_file, dict_file, transforms):
         super(CocoDetectionVG, self).__init__(img_dir, None)
         self._transforms = transforms
         self.prepare = ConvertCocoToVGH5()
+
+        # load dictionary
+        with open(dict_file, 'r') as f:
+            vg_dict = json.load(f)
+        
+        self.object_classes = vg_dict['idx_to_label']
+        self.predicate_classes = vg_dict['idx_to_predicate']
+
+        categories = []
+        for k,v in self.object_classes.items():
+            categories.append({'supercategory': v, 'id': k, 'name': v})
 
         roi_h5 = h5py.File(ann_file, 'r')
 
@@ -173,6 +184,14 @@ class CocoDetectionVG(torchvision.datasets.CocoDetection):
 
         # get all 'image_id' from img_info
         self.ids = [img['image_id'] for img in self.img_info]
+
+        # concatenate filenames and img_info 
+        images = [{'file_name': self.filenames[i], 'height': self.img_info[i]['height'], 'width': self.img_info[i]['width'], 'id': int(self.img_info[i]['image_id'])} for i in range(len(self.filenames))]
+
+        self.coco.dataset = {'categories': categories, 'images': images}
+
+        self.coco.createIndex()
+
 
     def __getitem__(self, idx):
         # img, target = super(CocoDetectionVG, self).__getitem__(idx)
@@ -304,8 +323,9 @@ def build(image_set, args):
     ann_file = args.ann_path
     img_dir = args.img_folder
     image_file = args.vg_image_file
+    dict_file = args.dict_path
 
-    dataset = CocoDetectionVG(ann_file, image_set, img_dir, image_file, transforms=make_coco_transforms(image_set))
+    dataset = CocoDetectionVG(ann_file, image_set, img_dir, image_file, dict_file, transforms=make_coco_transforms(image_set))
     return dataset
 
 

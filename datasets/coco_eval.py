@@ -39,7 +39,6 @@ class CocoEvaluator(object):
 
         for iou_type in self.iou_types:
             results = self.prepare(predictions, iou_type)
-
             # suppress pycocotools prints
             with open(os.devnull, 'w') as devnull:
                 with contextlib.redirect_stdout(devnull):
