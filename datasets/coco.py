@@ -256,14 +256,14 @@ class ConvertCocoToVGH5(object):
         box = boxes / BOX_SCALE * max(w, h)
         # guard against no boxes via resizing
         boxes = torch.as_tensor(box, dtype=torch.float32).reshape(-1, 4)
-        # boxes[:, 2:] += boxes[:, :2]
-        # boxes[:, 0::2].clamp_(min=0, max=w)
-        # boxes[:, 1::2].clamp_(min=0, max=h)
+        boxes[:, 2:] += boxes[:, :2]
+        boxes[:, 0::2].clamp_(min=0, max=w)
+        boxes[:, 1::2].clamp_(min=0, max=h)
 
         classes = target["labels"]
         # clone with dtype=torch.int64
-        classes = classes.clone().detach().numpy().astype(np.int64)
-
+        classes = classes.clone().detach()
+        
         keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
         boxes = boxes[keep]
         classes = classes[keep]
